@@ -11,7 +11,7 @@ export class AuthUtils {
         this.loginPage = new LoginPage(page);
     }
 
-    async login(username?: string, password?: string) {
+    async login(username?: string, password?: string) {     //Accepts two optional arguments (?)
         await this.loginPage.navigateToLoginPage();
         await this.loginPage.login(
             username || process.env.USER_NAME || '',
