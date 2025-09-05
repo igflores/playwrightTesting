@@ -1,5 +1,6 @@
 import { Page, expect } from '@playwright/test';
 import { ILoginSelectors } from '../interfaces/LoginPage';
+import { ERROR_MESSAGES } from '../data/messages';
 
 export class LoginPage {
     private page: Page;
@@ -42,6 +43,6 @@ export class LoginPage {
 
     async validateEmptyCredentialsError() {
         await expect(this.page.locator(this.selectors.errorMessage))
-            .toHaveText('Fail: Username and password are required for login.');
+            .toHaveText(ERROR_MESSAGES.LOGIN.EMPTY_CREDENTIALS);
     }
 }
