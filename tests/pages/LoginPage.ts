@@ -8,9 +8,9 @@ export class LoginPage {
     constructor(page: Page) {
         this.page = page;
         this.selectors = {
-            usernameInput: '[placeholder="Enter your username"]',
-            passwordInput: '[placeholder="Enter your password"]',
-            loginButton: 'button:has-text("Login")'
+            usernameInput: '#username',
+            passwordInput: 'input[type="password"]',
+            loginButton: 'button[type="submit"]'
         };
     }
 
