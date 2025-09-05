@@ -15,6 +15,10 @@ test.describe('Login Functionality', () => {
         await page.goto('/');
     });
 
+    test.afterAll(async ({ browser }) => {
+        await browser.close();
+    });
+
     test('should login successfully with valid credentials', async ({ page }) => {
         await authUtils.login();
     });
@@ -27,6 +31,13 @@ test.describe('Login Functionality', () => {
     test('should not login with empty password', async ({ page }) => {
         await loginPage.login(process.env.USER_NAME || '', '');
         await loginPage.validateErrorMessage();
+    });
+
+    test('should not login with empty credentials', async ({ page }) => {
+        await loginPage.login('', '');
+        
+        await loginPage.validateEmptyCredentialsError();
+        await expect(page).not.toHaveURL(/.*\/inventory/);
     });
 
     test('should not login with invalid credentials', async ({ page }) => {

@@ -7,4 +7,5 @@ export interface ILoginSelectors {
     usernameInput: string;
     passwordInput: string;
     loginButton: string;
+    errorMessage: string;
 }

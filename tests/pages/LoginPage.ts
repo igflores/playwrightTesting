@@ -10,7 +10,8 @@ export class LoginPage {
         this.selectors = {
             usernameInput: '#username',
             passwordInput: 'input[type="password"]',
-            loginButton: 'button[type="submit"]'
+            loginButton: 'button[type="submit"]',
+            errorMessage: 'div.text-red-400.bg-red-900\\/20'
         };
     }
 
@@ -37,5 +38,10 @@ export class LoginPage {
         const currentUrl = this.page.url();
         expect(currentUrl).not.toContain('/inventory');
         // Podríamos agregar más validaciones específicas aquí según el comportamiento real de la aplicación
+    }
+
+    async validateEmptyCredentialsError() {
+        await expect(this.page.locator(this.selectors.errorMessage))
+            .toHaveText('Fail: Username and password are required for login.');
     }
 }
