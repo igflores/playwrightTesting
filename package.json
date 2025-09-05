@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "Practicing with Playwright",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "playwright test tests/specs/login.spec.ts --headed",
+    "test:headless": "playwright test tests/specs/login.spec.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
