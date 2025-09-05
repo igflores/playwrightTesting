@@ -15,10 +15,6 @@ test.describe('Login Functionality', () => {
         await page.goto('/');
     });
 
-    test.afterAll(async ({ browser }) => {
-        await browser.close();
-    });
-
     test('should login successfully with valid credentials', async ({ page }) => {
         await authUtils.login();
     });
