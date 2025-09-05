@@ -26,7 +26,7 @@ export default defineConfig({
 	/* Global timeout for all tests */
 	timeout: 30000,
 	/* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-	use: {
+		use: {
 		/* Base URL to use in actions like `await page.goto('/')`. */
 		baseURL: 'https://orbit.upexgalaxy.com/',
 
@@ -34,12 +34,12 @@ export default defineConfig({
 		trace: 'on-first-retry',
 
 		/* Configure timeouts */
-		timeout: 30000, // Timeout for the entire test
 		actionTimeout: 10000, // Timeout for actions like click, type, etc.
 		navigationTimeout: 30000, // Timeout for navigation
-		expect: {
-			timeout: 6000 // Timeout for assertions
-		},
+	},
+	/* Configure expect timeout globally */
+	expect: {
+		timeout: 6000 // Timeout for assertions
 	},
 
 	/* Configure projects for major browsers */
