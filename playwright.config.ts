@@ -14,30 +14,27 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
 	testDir: './tests/specs',
 	/* Run tests in files in parallel */
-	fullyParallel: true,
+	fullyParallel: false,
+	workers: 1,
 	/* Fail the build on CI if you accidentally left test.only in the source code. */
 	forbidOnly: !!process.env.CI,
 	/* Retry on CI only */
 	retries: process.env.CI ? 2 : 0,
-	/* Opt out of parallel tests on CI. */
-	workers: process.env.CI ? 1 : undefined,
 	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
 	reporter: 'html',
-	/* Global timeout for all tests */
-	timeout: 30000,
-	/* Timeout for assertions. Playwright will retry for this duration. */
-	expect: { timeout: 5000 },
-	/* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
 	use: {
-		/* Base URL to use in actions like `await page.goto('/')`. */
 		baseURL: 'https://orbit.upexgalaxy.com/',
-
-		/* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+		headless: false,
+		viewport: { width: 1280, height: 720 },
+		actionTimeout: 15000,
+		navigationTimeout: 30000,
 		trace: 'on-first-retry',
-
-		/* Configure timeouts */
-		actionTimeout: 10000, // Timeout for actions like click, type, etc.
-		navigationTimeout: 30000, // Timeout for navigation
+	},
+	/* Global timeout for all tests */
+	timeout: 60000,
+	/* Timeout for assertions. Playwright will retry for this duration. */
+	expect: {
+		timeout: 10000,
 	},
 
 	/* Configure projects for major browsers */

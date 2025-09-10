@@ -19,6 +19,8 @@ export class LoginPage {
     async navigateToLoginPage() {
         await this.page.goto('/');
         await expect(this.page).toHaveTitle('QA Practice Site');
+        // Esperar a que el formulario de login sea visible
+        await expect(this.page.locator(this.selectors.loginButton)).toBeVisible();
     }
 
     async login(username: string, password: string) {
