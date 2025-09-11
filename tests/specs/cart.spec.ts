@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ProductListPage } from '../pages/ProductListPage';
 import { CartPage } from '../pages/CartPage';
+import { HeaderPage } from '../pages/HeaderPage';
 import { AuthUtils } from '../helper/auth/AuthUtils';
 import dotenv from 'dotenv';
 
@@ -10,11 +11,13 @@ test.describe('Carrito de Compras', () => {
     let authUtils: AuthUtils;
     let productListPage: ProductListPage;
     let cartPage: CartPage;
+    let headerPage: HeaderPage;
 
     test.beforeEach(async ({ page }) => {
         authUtils = new AuthUtils(page);
         productListPage = new ProductListPage(page);
         cartPage = new CartPage(page);
+        headerPage = new HeaderPage(page);
 
         // Login antes de cada prueba usando AuthUtils
         await authUtils.login();
@@ -38,7 +41,6 @@ test.describe('Carrito de Compras', () => {
         const availableProducts = await productListPage.getAvailableProductsCount();
         const minProductsToAdd = 2;
         const productsToAdd = Math.floor(Math.random() * (availableProducts - minProductsToAdd + 1)) + minProductsToAdd;
-        console.log(`Agregando ${productsToAdd} productos de ${availableProducts} disponibles`);
 
         // Agregar productos aleatorios
         const addedProductTitles = await productListPage.addMultipleProducts(productsToAdd);
@@ -70,14 +72,12 @@ test.describe('Carrito de Compras', () => {
         // 1. Obtener información del producto antes de agregarlo
         const product = await productListPage.getRandomProduct();
         const productInfoBefore = await productListPage.getProductInfo(product);
-        console.log(`Producto seleccionado: "${productInfoBefore.title}" - Precio: ${productInfoBefore.price}`);
-        
+
         // 2. Agregar el producto al carrito
         await productListPage.addProductToCart(product);
         
         // 3. Obtener información del producto después de agregarlo
         const productInfoAfter = await productListPage.getProductInfo(product);
-        console.log(`Producto en carrito: "${productInfoAfter.title}" - Precio: ${productInfoAfter.price}`);
         
         // 4. Validar que la información del producto no cambió
         expect(productInfoAfter.title).toBe(productInfoBefore.title);
@@ -88,7 +88,6 @@ test.describe('Carrito de Compras', () => {
         
         // 6. Eliminar el producto del carrito
         await productListPage.removeProductFromCart(product);
-        console.log(`Producto removido del carrito: "${productInfoBefore.title}"`);
         
         // 7. Validar que el contador volvió al valor inicial
         await cartPage.validateCartCount(initialCount);
@@ -104,7 +103,6 @@ test.describe('Carrito de Compras', () => {
         
         // 2. Obtener el número total de páginas
         const totalPages = await productListPage.getNumberOfPages();
-        console.log(`Total de páginas encontradas: ${totalPages}`);
         
         let totalProductsAdded = 0;
         
@@ -114,72 +112,47 @@ test.describe('Carrito de Compras', () => {
             if (currentPage > 1) {
                 await productListPage.goToPage(currentPage);
             }
-            console.log(`\nProcesando página ${currentPage} de ${totalPages}`);
             
             // 3.2 Obtener todos los productos de la página actual
             const products = await productListPage.getAllProducts();
-            console.log(`Encontrados ${products.length} productos en la página ${currentPage}`);
             
             // 3.3 Agregar cada producto al carrito
             for (const product of products) {
                 const productInfo = await productListPage.getProductInfo(product);
                 await productListPage.addProductToCart(product);
                 totalProductsAdded++;
-                console.log(`Agregado al carrito: "${productInfo.title}" - Precio: ${productInfo.price}`);
             }
         }
         
         // 4. Validar que el contador del carrito refleja todos los productos agregados
-        console.log(`\nTotal de productos agregados: ${totalProductsAdded}`);
         
         // Obtener el contador actual del carrito
         const finalCartCount = await cartPage.getCartCount();
-        console.log(`Contador del carrito: ${finalCartCount}`);
-        console.log(`Contador esperado: ${initialCount + totalProductsAdded}`);
         
         // Aserción explícita para validar que el contador coincide con el total de productos agregados
         expect(finalCartCount, 'El contador del carrito debe coincidir con el total de productos agregados').toBe(initialCount + totalProductsAdded);
     });
     
-    test('Should maintain cart contents when navigating between pages', async () => {
-        // 1. Agregar productos de la primera página
-        const availableProductsOnPage1 = await productListPage.getAvailableProductsCount();
-        const productsAddedOnFirstPage = Math.floor(Math.random() * availableProductsOnPage1) + 1;
-        
-        await productListPage.addMultipleProducts(productsAddedOnFirstPage);
-        console.log(`Número de productos añadidos en la página 1: ${productsAddedOnFirstPage}`);
-    
-        const countAfterFirstPage = await cartPage.getCartCount();
+    test('Should not persist cart contents after a session ends', async () => {
+        // 1. Obtener el número total de productos disponibles y calcular cuántos agregar
+        const availableProducts = await productListPage.getAvailableProductsCount();
+        const minProductsToAdd = 2;
+        const productsToAdd = Math.floor(Math.random() * (availableProducts - minProductsToAdd + 1)) + minProductsToAdd;
 
-        // 2. Obtener el número total de páginas y elegir una página aleatoria
-        const totalPages = await productListPage.getNumberOfPages();
-        
-        // Si hay menos de 2 páginas, el test de navegación no aplica.
-        if (totalPages < 2) {
-            console.log('Solo hay una página, la prueba de navegación no puede continuar.');
-        return; // Sale del test.
-        }
+        // 2. Agregar productos aleatorios
+        const addedProductTitles = await productListPage.addMultipleProducts(productsToAdd);
 
-        const randomPage = Math.floor(Math.random() * (totalPages - 1)) + 2;
-        console.log(`Navegando aleatoriamente a la página ${randomPage} de un total de ${totalPages}`);
+        // 3. Validar que tenemos los títulos de los productos agregados
+        expect(addedProductTitles.length).toBe(productsToAdd);
 
+        // 4. Realizar logout
+        await headerPage.logout();
 
-        // 3. Navegar a la página aleatoria y validar que el contador se mantiene
-        await productListPage.goToPage(randomPage);
-        const countAfterNavigation = await cartPage.getCartCount();
-        expect(countAfterNavigation).toEqual(countAfterFirstPage);
+        // 5. Volver a hacer login
+        await authUtils.login();
 
-        // 4. Agregar productos en la página aleatoria
-        const availableProductsOnRandomPage = await productListPage.getAvailableProductsCount();
-        const productsAddedOnRandomPage = Math.floor(Math.random() * availableProductsOnRandomPage) + 1;
-        
-        await productListPage.addMultipleProducts(productsAddedOnRandomPage);
-        console.log(`Número de productos añadidos en la página ${randomPage}: ${productsAddedOnRandomPage}`);
-
-        // Obtener el contador final
-        const finalCount = await cartPage.getCartCount();
-
-        // 5. Validar que el contador se incrementó correctamente
-        expect(finalCount).toEqual(countAfterFirstPage + productsAddedOnRandomPage);
+        // 6. Validar que el carrito está vacío después de volver a iniciar sesión
+        const cartCount = await cartPage.getCartCount();
+        expect(cartCount, 'El carrito debe estar vacío después de cerrar y abrir sesión').toBe(0);
     });
 });
