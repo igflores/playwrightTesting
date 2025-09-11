@@ -11,7 +11,7 @@ export class ProductListPage {
         this.selectors = PRODUCT_LIST_SELECTORS;
     }
 
-    private async getAllProducts(): Promise<Locator[]> {
+    async getAllProducts(): Promise<Locator[]> {
         await this.page.waitForSelector(this.selectors.productsGrid);
         return await this.page.locator(this.selectors.productCard).all();
     }

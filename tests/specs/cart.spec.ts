@@ -20,7 +20,7 @@ test.describe('Carrito de Compras', () => {
         await authUtils.login();
     });
 
-    test('Agregar un producto aleatorio al carrito', async () => {
+    test('Should add a single random product to the cart', async () => {
         const initialCount = await cartPage.getCartCount(); // Obtener contador inicial
 
         // Obtener y agregar un producto aleatorio
@@ -30,7 +30,7 @@ test.describe('Carrito de Compras', () => {
         await cartPage.validateCartCount(initialCount + 1); // Validar que el contador se incrementó en 1
     });
 
-    test('Agregar múltiples productos aleatorios al carrito', async () => {
+    test('Should add multiple random products to the cart', async () => {
         // Obtener contador inicial
         const initialCount = await cartPage.getCartCount();
         
@@ -50,7 +50,7 @@ test.describe('Carrito de Compras', () => {
         expect(addedProductTitles.length).toBe(productsToAdd);
     });
 
-    test('Validar límite de productos en el carrito en una página', async () => {
+    test('Should add all products from a single page to the cart', async () => {
         // Intentar agregar una gran cantidad de productos
         const productsToAdd = 10; // Puedes ajustar este número según el límite real
         const addedProductTitles = await productListPage.addMultipleProducts(productsToAdd);
@@ -63,7 +63,85 @@ test.describe('Carrito de Compras', () => {
         expect(finalCount).toBe(addedProductTitles.length);
     });
 
-    test('Validar navegación entre páginas manteniendo el carrito', async () => {
+    test('Should add and remove a product from the Product List Page', async () => {
+        // Obtener contador inicial del carrito
+        const initialCount = await cartPage.getCartCount();
+        
+        // 1. Obtener información del producto antes de agregarlo
+        const product = await productListPage.getRandomProduct();
+        const productInfoBefore = await productListPage.getProductInfo(product);
+        console.log(`Producto seleccionado: "${productInfoBefore.title}" - Precio: ${productInfoBefore.price}`);
+        
+        // 2. Agregar el producto al carrito
+        await productListPage.addProductToCart(product);
+        
+        // 3. Obtener información del producto después de agregarlo
+        const productInfoAfter = await productListPage.getProductInfo(product);
+        console.log(`Producto en carrito: "${productInfoAfter.title}" - Precio: ${productInfoAfter.price}`);
+        
+        // 4. Validar que la información del producto no cambió
+        expect(productInfoAfter.title).toBe(productInfoBefore.title);
+        expect(productInfoAfter.price).toBe(productInfoBefore.price);
+        
+        // 5. Validar que el contador se incrementó en 1
+        await cartPage.validateCartCount(initialCount + 1);
+        
+        // 6. Eliminar el producto del carrito
+        await productListPage.removeProductFromCart(product);
+        console.log(`Producto removido del carrito: "${productInfoBefore.title}"`);
+        
+        // 7. Validar que el contador volvió al valor inicial
+        await cartPage.validateCartCount(initialCount);
+        
+        // 8. Validar que el botón "Add to Cart" está visible nuevamente
+        await expect(product.locator(productListPage['selectors'].addToCartButton))
+            .toBeVisible({ timeout: 5000 });
+    });
+
+    test('Should add all products from all pages to cart', async () => {
+        // 1. Obtener el contador inicial del carrito
+        const initialCount = await cartPage.getCartCount();
+        
+        // 2. Obtener el número total de páginas
+        const totalPages = await productListPage.getNumberOfPages();
+        console.log(`Total de páginas encontradas: ${totalPages}`);
+        
+        let totalProductsAdded = 0;
+        
+        // 3. Iterar por cada página
+        for (let currentPage = 1; currentPage <= totalPages; currentPage++) {
+            // 3.1 Ir a la página actual
+            if (currentPage > 1) {
+                await productListPage.goToPage(currentPage);
+            }
+            console.log(`\nProcesando página ${currentPage} de ${totalPages}`);
+            
+            // 3.2 Obtener todos los productos de la página actual
+            const products = await productListPage.getAllProducts();
+            console.log(`Encontrados ${products.length} productos en la página ${currentPage}`);
+            
+            // 3.3 Agregar cada producto al carrito
+            for (const product of products) {
+                const productInfo = await productListPage.getProductInfo(product);
+                await productListPage.addProductToCart(product);
+                totalProductsAdded++;
+                console.log(`Agregado al carrito: "${productInfo.title}" - Precio: ${productInfo.price}`);
+            }
+        }
+        
+        // 4. Validar que el contador del carrito refleja todos los productos agregados
+        console.log(`\nTotal de productos agregados: ${totalProductsAdded}`);
+        
+        // Obtener el contador actual del carrito
+        const finalCartCount = await cartPage.getCartCount();
+        console.log(`Contador del carrito: ${finalCartCount}`);
+        console.log(`Contador esperado: ${initialCount + totalProductsAdded}`);
+        
+        // Aserción explícita para validar que el contador coincide con el total de productos agregados
+        expect(finalCartCount, 'El contador del carrito debe coincidir con el total de productos agregados').toBe(initialCount + totalProductsAdded);
+    });
+    
+    test('Should maintain cart contents when navigating between pages', async () => {
         // 1. Agregar productos de la primera página
         const availableProductsOnPage1 = await productListPage.getAvailableProductsCount();
         const productsAddedOnFirstPage = Math.floor(Math.random() * availableProductsOnPage1) + 1;
