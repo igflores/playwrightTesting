@@ -1,3 +1,9 @@
+export const HEADER_SELECTORS = {
+    menuButton: 'header button:has(svg.lucide-menu)',
+    dropdownMenu: '.absolute.right-0.mt-2',
+    logoutButton: '.absolute.right-0.mt-2 button:has-text("Logout")'
+};
+
 export const CART_SELECTORS = {
     cartButton: '#view-cart',
     cartCounter: '#view-cart'
